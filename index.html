@@ -9,9 +9,9 @@
   body {
     margin: 0;
     padding: 20px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     background: #0e0e0e;
     color: #eee;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
 
   .container {
@@ -27,44 +27,52 @@
 
   .video-wrapper iframe {
     position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
+    inset: 0;
+    width: 100%;
+    height: 100%;
   }
 
   .shadow-box {
     background: #1c1c1c;
-    border-radius: 12px;
+    border-radius: 14px;
     padding: 24px;
     text-align: center;
   }
 
   .sentence {
     font-size: 1.4rem;
-    line-height: 1.5;
-    margin-bottom: 16px;
+    line-height: 1.6;
+    margin-bottom: 14px;
+    min-height: 4.2em;
   }
 
   .status {
     font-size: 0.95rem;
     color: #aaa;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
   }
 
-  .controls button {
-    font-size: 1rem;
-    padding: 8px 14px;
-    margin: 0 4px;
+  .controls button,
+  .modes button {
+    font-size: 0.95rem;
+    padding: 8px 12px;
+    margin: 4px;
     border-radius: 8px;
     border: none;
     cursor: pointer;
   }
 
-  .controls button:hover {
-    opacity: 0.85;
+  .modes {
+    margin-bottom: 14px;
+  }
+
+  .active {
+    background: #444;
+    color: #fff;
   }
 
   .progress {
-    margin-top: 12px;
+    margin-top: 10px;
     font-size: 0.85rem;
     color: #888;
   }
@@ -78,7 +86,7 @@
   <div class="video-wrapper">
     <iframe
       id="player"
-      src="https://www.youtube.com/embed/XyuuezDhQgs?enablejsapi=1&start=70"
+      src="https://www.youtube.com/embed/XyuuezDhQgs?enablejsapi=1&start=61"
       frameborder="0"
       allow="autoplay; encrypted-media"
       allowfullscreen>
@@ -87,6 +95,14 @@
 
   <!-- 쉐도잉 박스 -->
   <div class="shadow-box">
+
+    <!-- 모드 선택 -->
+    <div class="modes">
+      <button onclick="setMode(1)" id="mode1">1. Full</button>
+      <button onclick="setMode(2)" id="mode2">2. Blanks</button>
+      <button onclick="setMode(3)" id="mode3">3. Hidden</button>
+    </div>
+
     <div class="sentence" id="sentenceBox"></div>
     <div class="status" id="statusText">▶ Press play to listen</div>
 
@@ -106,13 +122,13 @@
   let player;
   let currentIndex = 0;
   let stopTimer;
+  let mode = 1;
 
-  // Chapter 1 – 문장 단위
   const sentences = [
-    { text: "Once upon a time, a princess was born in a kingdom far away.", start: 70, end: 74 },
-    { text: "The Queen had long wished for a daughter with skin like snow.", start: 74, end: 79 },
-    { text: "Her wish had come true, and she named the princess Snow White.", start: 79, end: 84 },
-    { text: "Sadly, the Queen passed away not long after Snow White was born.", start: 84, end: 90 }
+    { text: "Once upon a time, a princess was born in a kingdom far away.", start: 61, end: 65 },
+    { text: "The Queen had long wished for a daughter with skin like snow.", start: 65, end: 70 },
+    { text: "Her wish had come true, and she named the princess Snow White.", start: 70, end: 75 },
+    { text: "Sadly, the Queen passed away not long after Snow White was born.", start: 75, end: 81 }
   ];
 
   function onYouTubeIframeAPIReady() {
@@ -151,16 +167,36 @@
     }
   }
 
+  function setMode(m) {
+    mode = m;
+    document.querySelectorAll(".modes button").forEach(b => b.classList.remove("active"));
+    document.getElementById(`mode${m}`).classList.add("active");
+    updateSentence();
+  }
+
+  function updateSentence() {
+    const text = sentences[currentIndex].text;
+
+    if (mode === 1) {
+      sentenceBox.innerText = text;
+    } else if (mode === 2) {
+      sentenceBox.innerText = text.replace(/\b(\w{4,})\b/g, "____");
+    } else {
+      sentenceBox.innerText = "";
+    }
+  }
+
   function updateUI() {
-    sentenceBox.innerText = sentences[currentIndex].text;
+    updateSentence();
     statusText.innerText = "▶ Press play to listen";
     progressText.innerText = `Sentence ${currentIndex + 1} / ${sentences.length}`;
   }
 
-  // YouTube API 로드
   const tag = document.createElement("script");
   tag.src = "https://www.youtube.com/iframe_api";
   document.body.appendChild(tag);
+
+  setMode(1);
 </script>
 
 </body>
