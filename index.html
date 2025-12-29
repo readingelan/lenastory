@@ -48,4 +48,130 @@
 
   .nav-btn { padding: 6px 10px; margin: 6px; border-radius: 8px; border: none; }
   .modes button { padding: 6px 10px; margin: 4px; border-radius: 8px; border: none; }
-  .active { b
+  .active { background: #444; color: #fff; }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <div class="video-wrapper">
+    <iframe id="player"
+      src="https://www.youtube.com/embed/XyuuezDhQgs?enablejsapi=1&start=61"
+      frameborder="0" allowfullscreen>
+    </iframe>
+  </div>
+
+  <div class="shadow-box">
+
+    <div id="titleBox">
+      <div class="title">박정현 따라하리나 ✏️📖🎧</div>
+      <div class="subtitle">English Shadowing Practice</div>
+    </div>
+
+    <div class="sentence" id="sentenceBox"></div>
+    <div id="statusText">⏭ Next to start</div>
+
+    <div>
+      <button class="nav-btn" onclick="prevSentence()">⏮</button>
+      <button class="record-btn" id="recordBtn" onclick="handleRecordClick()">🔴</button>
+      <button class="nav-btn" onclick="nextSentence()">⏭</button>
+    </div>
+
+    <div class="modes">
+      <button onclick="setMode(1)" id="mode1">Full</button>
+      <button onclick="setMode(2)" id="mode2">Blanks</button>
+      <button onclick="setMode(3)" id="mode3">Hidden</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let player, currentIndex = -1, isPlaying = false, stopTimer;
+let mode = 1;
+
+const sentences = [
+  { text: "Snow White and the Seven Dwarfs", start: 61, end: 64 },
+  { text: "Once upon a time, a princess was born in a kingdom far away.", start: 64, end: 71 },
+  { text: "The queen had long wished for a daughter with skin like snow.", start: 71, end: 77 },
+  { text: "Her wish had come true, and she named the princess Snow White.", start: 82, end: 88 }
+];
+
+function makeBlanks(t) {
+  return t.replace(/\b([A-Za-z]{4,})\b/g, "____");
+}
+
+function playSentence() {
+  if (currentIndex < 0) currentIndex = 0;
+  clearTimeout(stopTimer);
+
+  const s = sentences[currentIndex];
+  isPlaying = true;
+
+  recordBtn.innerText = "⏸";
+  recordBtn.classList.add("pause");
+
+  player.seekTo(s.start, true);
+  player.playVideo();
+
+  stopTimer = setTimeout(() => {
+    player.pauseVideo();
+    isPlaying = false;
+    recordBtn.innerText = "🔴";
+    recordBtn.classList.remove("pause");
+
+    // ✅ 다음 문장 자동 이동
+    if (currentIndex < sentences.length - 1) {
+      currentIndex++;
+      updateSentence();
+      statusText.innerText = "🎤 Shadow now";
+    } else {
+      statusText.innerText = "✅ Finished";
+    }
+  }, (s.end - s.start) * 1000);
+}
+
+function handleRecordClick() {
+  if (!isPlaying) playSentence();
+}
+
+function updateSentence() {
+  titleBox.style.display = currentIndex === 0 ? "none" : "none";
+  const t = sentences[currentIndex].text;
+  sentenceBox.innerText =
+    mode === 1 ? t :
+    mode === 2 ? makeBlanks(t) : "";
+}
+
+function nextSentence() {
+  if (currentIndex < sentences.length - 1) {
+    currentIndex++;
+    updateSentence();
+  }
+}
+function prevSentence() {
+  if (currentIndex > 0) {
+    currentIndex--;
+    updateSentence();
+  }
+}
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll(".modes button").forEach(b => b.classList.remove("active"));
+  document.getElementById(`mode${m}`).classList.add("active");
+  updateSentence();
+}
+
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player("player");
+  setMode(1);
+}
+
+const tag = document.createElement("script");
+tag.src = "https://www.youtube.com/iframe_api";
+document.body.appendChild(tag);
+</script>
+</body>
+</html>
