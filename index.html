@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Shadowing Practice – Snow White</title>
+<title>박정현 따라하리나 – Shadowing</title>
 
 <style>
   body {
@@ -15,7 +15,7 @@
   }
 
   .container {
-    max-width: 720px;
+    max-width: 760px;
     margin: 0 auto;
   }
 
@@ -34,49 +34,36 @@
 
   .shadow-box {
     background: #1c1c1c;
-    border-radius: 16px;
-    padding: 26px;
+    border-radius: 18px;
+    padding: 28px;
     text-align: center;
   }
 
   .title {
     font-size: 2rem;
     font-weight: 800;
-    margin-bottom: 10px;
-    letter-spacing: -0.02em;
+    margin-bottom: 6px;
   }
 
   .subtitle {
-    font-size: 1rem;
+    font-size: 0.95rem;
     color: #bbb;
     margin-bottom: 18px;
   }
 
-  .sentence {
-    font-size: 1.4rem;
-    line-height: 1.6;
+  select {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: none;
     margin-bottom: 14px;
-    min-height: 4.2em;
   }
 
-  .status {
-    font-size: 0.95rem;
-    color: #aaa;
-    margin-bottom: 18px;
-  }
-
-  .controls button,
   .modes button {
-    font-size: 0.95rem;
-    padding: 8px 12px;
+    padding: 6px 10px;
     margin: 4px;
     border-radius: 8px;
     border: none;
     cursor: pointer;
-  }
-
-  .modes {
-    margin-bottom: 14px;
   }
 
   .active {
@@ -84,10 +71,47 @@
     color: #fff;
   }
 
+  .sentence {
+    font-size: 1.45rem;
+    line-height: 1.6;
+    min-height: 4.2em;
+    margin: 16px 0;
+  }
+
+  .status {
+    font-size: 0.9rem;
+    color: #aaa;
+    margin-bottom: 18px;
+  }
+
+  /* 🔴 메인 쉐도잉 버튼 */
+  .record-btn {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: #d93025;
+    color: white;
+    font-size: 2.2rem;
+    border: none;
+    cursor: pointer;
+  }
+
+  .record-btn.pause {
+    background: #555;
+  }
+
+  .nav-btn {
+    padding: 6px 10px;
+    margin: 6px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+  }
+
   .progress {
-    margin-top: 10px;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: #888;
+    margin-top: 10px;
   }
 </style>
 </head>
@@ -101,7 +125,6 @@
       id="player"
       src="https://www.youtube.com/embed/XyuuezDhQgs?enablejsapi=1&start=61"
       frameborder="0"
-      allow="autoplay; encrypted-media"
       allowfullscreen>
     </iframe>
   </div>
@@ -109,128 +132,171 @@
   <!-- 쉐도잉 박스 -->
   <div class="shadow-box">
 
-    <!-- 타이틀 영역 -->
+    <!-- 타이틀 -->
     <div id="titleBox">
       <div class="title">박정현 따라하리나 ✏️📖🎧</div>
       <div class="subtitle">English Shadowing Practice</div>
     </div>
 
-    <!-- 모드 선택 -->
+    <!-- 챕터 -->
+    <select id="chapterSelect" onchange="changeChapter()">
+      <option value="0">Chapter 1</option>
+    </select>
+
+    <!-- 모드 -->
     <div class="modes">
-      <button onclick="setMode(1)" id="mode1">1. Full</button>
-      <button onclick="setMode(2)" id="mode2">2. Blanks</button>
-      <button onclick="setMode(3)" id="mode3">3. Hidden</button>
+      <button onclick="setMode(1)" id="mode1">Full</button>
+      <button onclick="setMode(2)" id="mode2">Blanks</button>
+      <button onclick="setMode(3)" id="mode3">Hidden</button>
     </div>
 
     <div class="sentence" id="sentenceBox"></div>
-    <div class="status" id="statusText">⏭ Press next to start</div>
+    <div class="status" id="statusText">⏭ Next to start</div>
 
-    <div class="controls">
-      <button onclick="prevSentence()">⏮</button>
-      <button onclick="playSentence()">▶</button>
-      <button onclick="repeatSentence()">🔁</button>
-      <button onclick="nextSentence()">⏭</button>
+    <!-- 컨트롤 -->
+    <div>
+      <button class="nav-btn" onclick="prevSentence()">⏮</button>
+
+      <button
+        class="record-btn"
+        id="recordBtn"
+        onclick="handleRecordClick()">
+        🔴
+      </button>
+
+      <button class="nav-btn" onclick="nextSentence()">⏭</button>
     </div>
 
     <div class="progress" id="progressText"></div>
   </div>
-
 </div>
 
 <script>
-  let player;
-  let currentIndex = -1; // 타이틀 상태
-  let stopTimer;
-  let mode = 1;
+let player;
+let currentIndex = -1;
+let mode = 1;
+let stopTimer;
+let isPlaying = false;
 
-  const sentences = [
-    { text: "Snow White and the Seven Dwarfs", start: 61, end: 64 },
-    { text: "Once upon a time, a princess was born in a kingdom far away.", start: 64, end: 68 },
-    { text: "The Queen had long wished for a daughter with skin like snow.", start: 68, end: 73 },
-    { text: "Her wish had come true, and she named the princess Snow White.", start: 73, end: 78 },
-    { text: "Sadly, the Queen passed away not long after Snow White was born.", start: 78, end: 84 }
-  ];
+const chapters = [[
+  { text: "Snow White and the Seven Dwarfs", start: 61, end: 64 },
+  { text: "Once upon a time, a princess was born in a kingdom far away.", start: 64, end: 71 },
+  { text: "The queen had long wished for a daughter with skin like snow.", start: 71, end: 77 },
+  { text: "Her wish had come true, and she named the princess Snow White.", start: 82, end: 88 }
+]];
 
-  function onYouTubeIframeAPIReady() {
-    player = new YT.Player("player");
+let sentences = chapters[0];
+
+function makeBlanks(text) {
+  return text.replace(
+    /\b(?!the\b|and\b|for\b|with\b|that\b|this\b|from\b|into\b)([A-Za-z]{4,})\b/gi,
+    "____"
+  );
+}
+
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player("player");
+  setMode(1);
+  updateUI();
+}
+
+function autoPlayCurrent() {
+  playSentence(true);
+}
+
+function playSentence(auto = false) {
+  if (currentIndex < 0) return;
+
+  clearTimeout(stopTimer);
+  const s = sentences[currentIndex];
+  isPlaying = true;
+
+  recordBtn.innerText = "⏸";
+  recordBtn.classList.add("pause");
+
+  player.seekTo(s.start, true);
+  player.playVideo();
+  statusText.innerText = "▶ Listening...";
+
+  stopTimer = setTimeout(() => {
+    player.pauseVideo();
+    isPlaying = false;
+    recordBtn.innerText = "🔴";
+    recordBtn.classList.remove("pause");
+    statusText.innerText = "🎤 Shadow now";
+  }, (s.end - s.start) * 1000);
+}
+
+function handleRecordClick() {
+  if (isPlaying) return;
+  playSentence();
+}
+
+function nextSentence() {
+  if (currentIndex < sentences.length - 1) {
+    currentIndex++;
+    updateUI();
+    autoPlayCurrent();
+  }
+}
+
+function prevSentence() {
+  if (currentIndex > 0) {
+    currentIndex--;
     updateUI();
   }
+}
 
-  function playSentence() {
-    if (currentIndex < 0) return;
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll(".modes button").forEach(b => b.classList.remove("active"));
+  document.getElementById(`mode${m}`).classList.add("active");
+  updateSentence();
+}
 
-    clearTimeout(stopTimer);
-    const s = sentences[currentIndex];
-    statusText.innerText = "▶ Listening...";
-    player.seekTo(s.start, true);
-    player.playVideo();
-
-    stopTimer = setTimeout(() => {
-      player.pauseVideo();
-      statusText.innerText = "🎤 Now shadow the sentence";
-    }, (s.end - s.start) * 1000);
+function updateSentence() {
+  if (currentIndex < 0) {
+    sentenceBox.innerText = "";
+    return;
   }
+  const t = sentences[currentIndex].text;
+  sentenceBox.innerText =
+    mode === 1 ? t :
+    mode === 2 ? makeBlanks(t) : "";
+}
 
-  function repeatSentence() {
-    playSentence();
-  }
-
-  function nextSentence() {
-    if (currentIndex < sentences.length - 1) {
-      currentIndex++;
-      updateUI();
-    }
-  }
-
-  function prevSentence() {
-    if (currentIndex > -1) {
-      currentIndex--;
-      updateUI();
-    }
-  }
-
-  function setMode(m) {
-    mode = m;
-    document.querySelectorAll(".modes button").forEach(b => b.classList.remove("active"));
-    document.getElementById(`mode${m}`).classList.add("active");
+function updateUI() {
+  if (currentIndex < 0) {
+    titleBox.style.display = "block";
+    statusText.innerText = "⏭ Next to start";
+    progressText.innerText = "";
+  } else {
+    titleBox.style.display = "none";
     updateSentence();
+    statusText.innerText = "▶ Listening...";
+    progressText.innerText = `Sentence ${currentIndex + 1} / ${sentences.length}`;
   }
+}
 
-  function updateSentence() {
-    if (currentIndex < 0) {
-      sentenceBox.innerText = "";
-      return;
-    }
+function changeChapter() {
+  sentences = chapters[chapterSelect.value];
+  currentIndex = -1;
+  updateUI();
+}
 
-    const text = sentences[currentIndex].text;
-
-    if (mode === 1) {
-      sentenceBox.innerText = text;
-    } else if (mode === 2) {
-      sentenceBox.innerText = text.replace(/\b(\w{4,})\b/g, "____");
-    } else {
-      sentenceBox.innerText = "";
-    }
+// 최초 Next 클릭 시 첫 문장 자동 시작
+function nextSentence() {
+  if (currentIndex < sentences.length - 1) {
+    currentIndex++;
+    updateUI();
+    autoPlayCurrent();
   }
+}
 
-  function updateUI() {
-    if (currentIndex < 0) {
-      titleBox.style.display = "block";
-      statusText.innerText = "⏭ Press next to start";
-      progressText.innerText = "";
-    } else {
-      titleBox.style.display = "none";
-      updateSentence();
-      statusText.innerText = "▶ Press play to listen";
-      progressText.innerText = `Sentence ${currentIndex + 1} / ${sentences.length}`;
-    }
-  }
-
-  const tag = document.createElement("script");
-  tag.src = "https://www.youtube.com/iframe_api";
-  document.body.appendChild(tag);
-
-  setMode(1);
+// YouTube API
+const tag = document.createElement("script");
+tag.src = "https://www.youtube.com/iframe_api";
+document.body.appendChild(tag);
 </script>
 
 </body>
