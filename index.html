@@ -34,9 +34,22 @@
 
   .shadow-box {
     background: #1c1c1c;
-    border-radius: 14px;
-    padding: 24px;
+    border-radius: 16px;
+    padding: 26px;
     text-align: center;
+  }
+
+  .title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+    letter-spacing: -0.02em;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+    color: #bbb;
+    margin-bottom: 18px;
   }
 
   .sentence {
@@ -96,6 +109,12 @@
   <!-- 쉐도잉 박스 -->
   <div class="shadow-box">
 
+    <!-- 타이틀 영역 -->
+    <div id="titleBox">
+      <div class="title">박정현 따라하리나 ✏️📖🎧</div>
+      <div class="subtitle">English Shadowing Practice</div>
+    </div>
+
     <!-- 모드 선택 -->
     <div class="modes">
       <button onclick="setMode(1)" id="mode1">1. Full</button>
@@ -104,7 +123,7 @@
     </div>
 
     <div class="sentence" id="sentenceBox"></div>
-    <div class="status" id="statusText">▶ Press play to listen</div>
+    <div class="status" id="statusText">⏭ Press next to start</div>
 
     <div class="controls">
       <button onclick="prevSentence()">⏮</button>
@@ -120,15 +139,16 @@
 
 <script>
   let player;
-  let currentIndex = 0;
+  let currentIndex = -1; // 타이틀 상태
   let stopTimer;
   let mode = 1;
 
   const sentences = [
-    { text: "Once upon a time, a princess was born in a kingdom far away.", start: 61, end: 65 },
-    { text: "The Queen had long wished for a daughter with skin like snow.", start: 65, end: 70 },
-    { text: "Her wish had come true, and she named the princess Snow White.", start: 70, end: 75 },
-    { text: "Sadly, the Queen passed away not long after Snow White was born.", start: 75, end: 81 }
+    { text: "Snow White and the Seven Dwarfs", start: 61, end: 64 },
+    { text: "Once upon a time, a princess was born in a kingdom far away.", start: 64, end: 68 },
+    { text: "The Queen had long wished for a daughter with skin like snow.", start: 68, end: 73 },
+    { text: "Her wish had come true, and she named the princess Snow White.", start: 73, end: 78 },
+    { text: "Sadly, the Queen passed away not long after Snow White was born.", start: 78, end: 84 }
   ];
 
   function onYouTubeIframeAPIReady() {
@@ -137,6 +157,8 @@
   }
 
   function playSentence() {
+    if (currentIndex < 0) return;
+
     clearTimeout(stopTimer);
     const s = sentences[currentIndex];
     statusText.innerText = "▶ Listening...";
@@ -161,7 +183,7 @@
   }
 
   function prevSentence() {
-    if (currentIndex > 0) {
+    if (currentIndex > -1) {
       currentIndex--;
       updateUI();
     }
@@ -175,6 +197,11 @@
   }
 
   function updateSentence() {
+    if (currentIndex < 0) {
+      sentenceBox.innerText = "";
+      return;
+    }
+
     const text = sentences[currentIndex].text;
 
     if (mode === 1) {
@@ -187,9 +214,16 @@
   }
 
   function updateUI() {
-    updateSentence();
-    statusText.innerText = "▶ Press play to listen";
-    progressText.innerText = `Sentence ${currentIndex + 1} / ${sentences.length}`;
+    if (currentIndex < 0) {
+      titleBox.style.display = "block";
+      statusText.innerText = "⏭ Press next to start";
+      progressText.innerText = "";
+    } else {
+      titleBox.style.display = "none";
+      updateSentence();
+      statusText.innerText = "▶ Press play to listen";
+      progressText.innerText = `Sentence ${currentIndex + 1} / ${sentences.length}`;
+    }
   }
 
   const tag = document.createElement("script");
