@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shadowing Practice – Snow White</title>
+
+<style>
+  body {
+    margin: 0;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #0e0e0e;
+    color: #eee;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .video-wrapper {
+    position: relative;
+    padding-top: 56.25%;
+    margin-bottom: 20px;
+  }
+
+  .video-wrapper iframe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+  }
+
+  .shadow-box {
+    background: #1c1c1c;
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+  }
+
+  .sentence {
+    font-size: 1.4rem;
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  .status {
+    font-size: 0.95rem;
+    color: #aaa;
+    margin-bottom: 20px;
+  }
+
+  .controls button {
+    font-size: 1rem;
+    padding: 8px 14px;
+    margin: 0 4px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+  }
+
+  .controls button:hover {
+    opacity: 0.85;
+  }
+
+  .progress {
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: #888;
+  }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <!-- 영상 -->
+  <div class="video-wrapper">
+    <iframe
+      id="player"
+      src="https://www.youtube.com/embed/XyuuezDhQgs?enablejsapi=1&start=70"
+      frameborder="0"
+      allow="autoplay; encrypted-media"
+      allowfullscreen>
+    </iframe>
+  </div>
+
+  <!-- 쉐도잉 박스 -->
+  <div class="shadow-box">
+    <div class="sentence" id="sentenceBox"></div>
+    <div class="status" id="statusText">▶ Press play to listen</div>
+
+    <div class="controls">
+      <button onclick="prevSentence()">⏮</button>
+      <button onclick="playSentence()">▶</button>
+      <button onclick="repeatSentence()">🔁</button>
+      <button onclick="nextSentence()">⏭</button>
+    </div>
+
+    <div class="progress" id="progressText"></div>
+  </div>
+
+</div>
+
+<script>
+  let player;
+  let currentIndex = 0;
+  let stopTimer;
+
+  // Chapter 1 – 문장 단위
+  const sentences = [
+    { text: "Once upon a time, a princess was born in a kingdom far away.", start: 70, end: 74 },
+    { text: "The Queen had long wished for a daughter with skin like snow.", start: 74, end: 79 },
+    { text: "Her wish had come true, and she named the princess Snow White.", start: 79, end: 84 },
+    { text: "Sadly, the Queen passed away not long after Snow White was born.", start: 84, end: 90 }
+  ];
+
+  function onYouTubeIframeAPIReady() {
+    player = new YT.Player("player");
+    updateUI();
+  }
+
+  function playSentence() {
+    clearTimeout(stopTimer);
+    const s = sentences[currentIndex];
+    statusText.innerText = "▶ Listening...";
+    player.seekTo(s.start, true);
+    player.playVideo();
+
+    stopTimer = setTimeout(() => {
+      player.pauseVideo();
+      statusText.innerText = "🎤 Now shadow the sentence";
+    }, (s.end - s.start) * 1000);
+  }
+
+  function repeatSentence() {
+    playSentence();
+  }
+
+  function nextSentence() {
+    if (currentIndex < sentences.length - 1) {
+      currentIndex++;
+      updateUI();
+    }
+  }
+
+  function prevSentence() {
+    if (currentIndex > 0) {
+      currentIndex--;
+      updateUI();
+    }
+  }
+
+  function updateUI() {
+    sentenceBox.innerText = sentences[currentIndex].text;
+    statusText.innerText = "▶ Press play to listen";
+    progressText.innerText = `Sentence ${currentIndex + 1} / ${sentences.length}`;
+  }
+
+  // YouTube API 로드
+  const tag = document.createElement("script");
+  tag.src = "https://www.youtube.com/iframe_api";
+  document.body.appendChild(tag);
+</script>
+
+</body>
+</html>
