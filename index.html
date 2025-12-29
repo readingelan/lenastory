@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Shadowing Practice – Snow White</title>
+<title>박정현 따라하리나 – Shadowing</title>
 
 <style>
   body {
@@ -15,7 +15,7 @@
   }
 
   .container {
-    max-width: 720px;
+    max-width: 760px;
     margin: 0 auto;
   }
 
@@ -42,32 +42,24 @@
   .title {
     font-size: 2rem;
     font-weight: 800;
-    margin-bottom: 10px;
-    letter-spacing: -0.02em;
+    margin-bottom: 6px;
   }
 
   .subtitle {
-    font-size: 1rem;
+    font-size: 0.95rem;
     color: #bbb;
     margin-bottom: 18px;
   }
 
-  .sentence {
-    font-size: 1.4rem;
-    line-height: 1.6;
+  select {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: none;
     margin-bottom: 14px;
-    min-height: 4.2em;
   }
 
-  .status {
-    font-size: 0.95rem;
-    color: #aaa;
-    margin-bottom: 18px;
-  }
-
-  .controls button,
-  .modes button {
-    font-size: 0.95rem;
+  .modes button,
+  .controls button {
     padding: 8px 12px;
     margin: 4px;
     border-radius: 8px;
@@ -75,19 +67,28 @@
     cursor: pointer;
   }
 
-  .modes {
-    margin-bottom: 14px;
-  }
-
   .active {
     background: #444;
     color: #fff;
   }
 
+  .sentence {
+    font-size: 1.4rem;
+    line-height: 1.6;
+    min-height: 4.2em;
+    margin: 14px 0;
+  }
+
+  .status {
+    font-size: 0.9rem;
+    color: #aaa;
+    margin-bottom: 12px;
+  }
+
   .progress {
-    margin-top: 10px;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: #888;
+    margin-top: 8px;
   }
 </style>
 </head>
@@ -101,7 +102,6 @@
       id="player"
       src="https://www.youtube.com/embed/XyuuezDhQgs?enablejsapi=1&start=61"
       frameborder="0"
-      allow="autoplay; encrypted-media"
       allowfullscreen>
     </iframe>
   </div>
@@ -109,21 +109,27 @@
   <!-- 쉐도잉 박스 -->
   <div class="shadow-box">
 
-    <!-- 타이틀 영역 -->
+    <!-- 타이틀 -->
     <div id="titleBox">
       <div class="title">박정현 따라하리나 ✏️📖🎧</div>
       <div class="subtitle">English Shadowing Practice</div>
     </div>
 
-    <!-- 모드 선택 -->
+    <!-- 챕터 선택 -->
+    <select id="chapterSelect" onchange="changeChapter()">
+      <option value="0">Chapter 1</option>
+      <option value="1">Chapter 2</option>
+    </select>
+
+    <!-- 모드 -->
     <div class="modes">
-      <button onclick="setMode(1)" id="mode1">1. Full</button>
-      <button onclick="setMode(2)" id="mode2">2. Blanks</button>
-      <button onclick="setMode(3)" id="mode3">3. Hidden</button>
+      <button onclick="setMode(1)" id="mode1">Full</button>
+      <button onclick="setMode(2)" id="mode2">Blanks</button>
+      <button onclick="setMode(3)" id="mode3">Hidden</button>
     </div>
 
     <div class="sentence" id="sentenceBox"></div>
-    <div class="status" id="statusText">⏭ Press next to start</div>
+    <div class="status" id="statusText">⏭ Next to start</div>
 
     <div class="controls">
       <button onclick="prevSentence()">⏮</button>
@@ -134,103 +140,118 @@
 
     <div class="progress" id="progressText"></div>
   </div>
-
 </div>
 
 <script>
-  let player;
-  let currentIndex = -1; // 타이틀 상태
-  let stopTimer;
-  let mode = 1;
+let player;
+let currentIndex = -1;
+let mode = 1;
+let stopTimer;
 
-  const sentences = [
+const chapters = [
+  [
     { text: "Snow White and the Seven Dwarfs", start: 61, end: 64 },
-    { text: "Once upon a time, a princess was born in a kingdom far away.", start: 64, end: 68 },
-    { text: "The Queen had long wished for a daughter with skin like snow.", start: 68, end: 73 },
-    { text: "Her wish had come true, and she named the princess Snow White.", start: 73, end: 78 },
-    { text: "Sadly, the Queen passed away not long after Snow White was born.", start: 78, end: 84 }
-  ];
+    { text: "Once upon a time, a princess was born in a kingdom far away.", start: 64, end: 71 },
+    { text: "The queen had long wished for a daughter with skin like snow.", start: 71, end: 77 },
+    { text: "Her wish had come true, and she named the princess Snow White.", start: 82, end: 88 },
+    { text: "Sadly, the queen passed away not long after Snow White was born.", start: 88, end: 95 }
+  ],
+  [
+    { text: "This gave the queen a great shock.", start: 187, end: 190 },
+    { text: "Her heart filled with jealousy and hatred.", start: 190, end: 195 },
+    { text: "She ordered a huntsman to take Snow White into the woods.", start: 209, end: 215 }
+  ]
+];
 
-  function onYouTubeIframeAPIReady() {
-    player = new YT.Player("player");
+let sentences = chapters[0];
+
+// 주요 단어만 빈칸 처리
+function makeBlanks(text) {
+  return text.replace(
+    /\b(?!the\b|and\b|for\b|with\b|that\b|this\b|from\b|into\b|upon\b)([A-Za-z]{4,})\b/gi,
+    "____"
+  );
+}
+
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player("player");
+  setMode(1);
+  updateUI();
+}
+
+function playSentence() {
+  if (currentIndex < 0) return;
+  clearTimeout(stopTimer);
+  const s = sentences[currentIndex];
+
+  player.seekTo(s.start, true);
+  player.playVideo();
+  statusText.innerText = "▶ Listening...";
+
+  stopTimer = setTimeout(() => {
+    player.pauseVideo();
+    statusText.innerText = "🎤 Now shadow";
+  }, (s.end - s.start) * 1000);
+}
+
+function repeatSentence() { playSentence(); }
+
+function nextSentence() {
+  if (currentIndex < sentences.length - 1) {
+    currentIndex++;
     updateUI();
   }
+}
 
-  function playSentence() {
-    if (currentIndex < 0) return;
-
-    clearTimeout(stopTimer);
-    const s = sentences[currentIndex];
-    statusText.innerText = "▶ Listening...";
-    player.seekTo(s.start, true);
-    player.playVideo();
-
-    stopTimer = setTimeout(() => {
-      player.pauseVideo();
-      statusText.innerText = "🎤 Now shadow the sentence";
-    }, (s.end - s.start) * 1000);
+function prevSentence() {
+  if (currentIndex > -1) {
+    currentIndex--;
+    updateUI();
   }
+}
 
-  function repeatSentence() {
-    playSentence();
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll(".modes button").forEach(b => b.classList.remove("active"));
+  document.getElementById(`mode${m}`).classList.add("active");
+  updateSentence();
+}
+
+function updateSentence() {
+  if (currentIndex < 0) {
+    sentenceBox.innerText = "";
+    return;
   }
+  const t = sentences[currentIndex].text;
+  sentenceBox.innerText =
+    mode === 1 ? t :
+    mode === 2 ? makeBlanks(t) : "";
+}
 
-  function nextSentence() {
-    if (currentIndex < sentences.length - 1) {
-      currentIndex++;
-      updateUI();
-    }
-  }
-
-  function prevSentence() {
-    if (currentIndex > -1) {
-      currentIndex--;
-      updateUI();
-    }
-  }
-
-  function setMode(m) {
-    mode = m;
-    document.querySelectorAll(".modes button").forEach(b => b.classList.remove("active"));
-    document.getElementById(`mode${m}`).classList.add("active");
+function updateUI() {
+  if (currentIndex < 0) {
+    titleBox.style.display = "block";
+    progressText.innerText = "";
+    statusText.innerText = "⏭ Next to start";
+  } else {
+    titleBox.style.display = "none";
     updateSentence();
+    progressText.innerText = `Sentence ${currentIndex + 1} / ${sentences.length}`;
+    statusText.innerText = "▶ Press play";
   }
+}
 
-  function updateSentence() {
-    if (currentIndex < 0) {
-      sentenceBox.innerText = "";
-      return;
-    }
+function changeChapter() {
+  const idx = chapterSelect.value;
+  sentences = chapters[idx];
+  currentIndex = -1;
+  updateUI();
+}
 
-    const text = sentences[currentIndex].text;
-
-    if (mode === 1) {
-      sentenceBox.innerText = text;
-    } else if (mode === 2) {
-      sentenceBox.innerText = text.replace(/\b(\w{4,})\b/g, "____");
-    } else {
-      sentenceBox.innerText = "";
-    }
-  }
-
-  function updateUI() {
-    if (currentIndex < 0) {
-      titleBox.style.display = "block";
-      statusText.innerText = "⏭ Press next to start";
-      progressText.innerText = "";
-    } else {
-      titleBox.style.display = "none";
-      updateSentence();
-      statusText.innerText = "▶ Press play to listen";
-      progressText.innerText = `Sentence ${currentIndex + 1} / ${sentences.length}`;
-    }
-  }
-
-  const tag = document.createElement("script");
-  tag.src = "https://www.youtube.com/iframe_api";
-  document.body.appendChild(tag);
-
-  setMode(1);
+// YouTube API
+const tag = document.createElement("script");
+tag.src = "https://www.youtube.com/iframe_api";
+document.body.appendChild(tag);
 </script>
 
 </body>
